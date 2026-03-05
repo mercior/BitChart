@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC Trading Chart</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="chart-container"></div>
+
+    <script type="module">
+        import { Chart } from './src/index.js';
+
+        // Generate realistic BTC sample data (3-minute candles)
+        function generateSampleData(count = 500) {
+            const candles = [];
+            let price = 71000;
+            let time = Math.floor(Date.now() / 1000) - count * 180;
+
+            for (let i = 0; i < count; i++) {
+                const volatility = 30 + Math.random() * 80;
+                const drift = (Math.random() - 0.48) * volatility;
+                const open = price;
+                const close = open + drift;
+                const high = Math.max(open, close) + Math.random() * volatility * 0.6;
+                const low = Math.min(open, close) - Math.random() * volatility * 0.6;
+                const volume = 0.5 + Math.random() * 10;
+
+                candles.push({
+                    time,
+                    open: Math.round(open * 100) / 100,
+                    high: Math.round(high * 100) / 100,
+                    low: Math.round(low * 100) / 100,
+                    close: Math.round(close * 100) / 100,
+                    volume: Math.round(volume * 100) / 100,
+                });
+
+                price = close;
+                time += 180;
+            }
+            return candles;
+        }
+
+        // Create chart
+        const container = document.getElementById('chart-container');
+        const chart = new Chart(container);
+
+        // Load historical data
+        const data = generateSampleData(500);
+        chart.setData(data);
+
+        // Listen for interval changes
+        chart.on('intervalChanged', (interval) => {
+            console.log('Interval changed to:', interval);
+        });
+
+        // Simulate real-time streaming
+        let lastCandle = { ...data[data.length - 1] };
+        let tickCount = 0;
+
+        setInterval(() => {
+            tickCount++;
+            const volatility = 15 + Math.random() * 40;
+            const drift = (Math.random() - 0.5) * volatility * 0.3;
+            lastCandle.close += drift;
+            lastCandle.close = Math.round(lastCandle.close * 100) / 100;
+            lastCandle.high = Math.round(Math.max(lastCandle.high, lastCandle.close) * 100) / 100;
+            lastCandle.low = Math.round(Math.min(lastCandle.low, lastCandle.close) * 100) / 100;
+
+            // Every 18 ticks (~18 seconds) start a new candle (simulating 3-min candles compressed)
+            if (tickCount % 18 === 0) {
+                const newTime = lastCandle.time + 180;
+                lastCandle = {
+                    time: newTime,
+                    open: lastCandle.close,
+                    high: lastCandle.close,
+                    low: lastCandle.close,
+                    close: lastCandle.close,
+                    volume: Math.round(Math.random() * 5 * 100) / 100,
+                };
+            }
+
+            chart.updateCandle({ ...lastCandle });
+        }, 1000);
+    </script>
+</body>
+</html>
