@@ -3,6 +3,18 @@ import { LineDrawing } from '../drawings/LineDrawing.js';
 import { ExtendedLineDrawing } from '../drawings/ExtendedLineDrawing.js';
 import { HorizontalLineDrawing } from '../drawings/HorizontalLineDrawing.js';
 import { TextDrawing } from '../drawings/TextDrawing.js';
+import { RectangleDrawing } from '../drawings/RectangleDrawing.js';
+import { TriangleDrawing } from '../drawings/TriangleDrawing.js';
+import { CircleDrawing } from '../drawings/CircleDrawing.js';
+import { PolygonDrawing } from '../drawings/PolygonDrawing.js';
+import { LongPositionDrawing } from '../drawings/LongPositionDrawing.js';
+import { ShortPositionDrawing } from '../drawings/ShortPositionDrawing.js';
+
+const TWO_CLICK_TOOLS = new Set([
+    DRAWING_TOOLS.LINE, DRAWING_TOOLS.EXTENDED_LINE,
+    DRAWING_TOOLS.RECTANGLE, DRAWING_TOOLS.CIRCLE,
+    DRAWING_TOOLS.LONG_POSITION, DRAWING_TOOLS.SHORT_POSITION,
+]);
 
 export class DrawingToolHandler {
     constructor(chart) {
@@ -12,18 +24,24 @@ export class DrawingToolHandler {
         this._dragInfo = null;
         this._skipNextClick = false;
         this._clonedOnThisDrag = false;
+        this._lastClickTime = 0;
     }
 
     get state() { return this._state; }
 
-    _getTimePrice(e) {
+    _getTimePrice(e, snap) {
         const rect = this._chart.layout.uiCanvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         const ts = this._chart.timeScale;
         const ps = this._chart.priceScale;
-        const timeIndex = ts.xToIndex(x);
-        const price = ps.yToPrice(y);
+        let timeIndex = ts.xToIndex(x);
+        let price = ps.yToPrice(y);
+        if (snap) {
+            const s = this._snapToCandle(timeIndex, price);
+            timeIndex = s.time;
+            price = s.price;
+        }
         const candle = this._chart.dataStore.getCandle(Math.round(timeIndex));
         return { time: candle ? candle.time : timeIndex, price, x, y, index: timeIndex };
     }
@@ -31,9 +49,47 @@ export class DrawingToolHandler {
     onMouseDown(e) {
         const dm = this._chart.drawingManager;
         const tool = dm.activeTool;
+        const now = Date.now();
+        const isDoubleClick = (now - this._lastClickTime) < 350;
+        this._lastClickTime = now;
 
+        // Polygon placement
+        if (this._state === 'placing' && this._pendingDrawing &&
+            this._pendingDrawing.type === 'polygon') {
+            if (isDoubleClick && this._pendingDrawing.anchors.length >= 3) {
+                this._pendingDrawing.finalizePlacement();
+                this._pendingDrawing = null;
+                this._state = 'idle';
+                dm.setActiveTool(DRAWING_TOOLS.POINTER);
+                dm.emit('drawingsChanged');
+                this._skipNextClick = true;
+                return true;
+            }
+            const tp = this._getTimePrice(e, e.ctrlKey);
+            this._pendingDrawing.addPoint(tp.index, tp.price);
+            dm.emit('drawingsChanged');
+            this._skipNextClick = true;
+            return true;
+        }
+
+        // Triangle: multi-step placement
+        if (this._state === 'placing' && this._pendingDrawing &&
+            this._pendingDrawing.type === 'triangle') {
+            const tp = this._getTimePrice(e, e.ctrlKey);
+            const done = this._pendingDrawing.advancePlacement(tp.index, tp.price);
+            if (done) {
+                this._pendingDrawing = null;
+                this._state = 'idle';
+                dm.setActiveTool(DRAWING_TOOLS.POINTER);
+            }
+            dm.emit('drawingsChanged');
+            this._skipNextClick = true;
+            return true;
+        }
+
+        // Standard 2-click tools: finalize on second click
         if (this._state === 'placing' && this._pendingDrawing) {
-            const tp = this._getTimePrice(e);
+            const tp = this._getTimePrice(e, e.ctrlKey);
             this._pendingDrawing.finalizePlacement(tp.index, tp.price);
             this._pendingDrawing = null;
             this._state = 'idle';
@@ -55,42 +111,60 @@ export class DrawingToolHandler {
         return false;
     }
 
+    _snapToCandle(timeIndex, price) {
+        const snappedIndex = Math.round(timeIndex);
+        const candle = this._chart.dataStore.getCandle(snappedIndex);
+        if (!candle) return { time: snappedIndex, price };
+        const distHigh = Math.abs(price - candle.high);
+        const distLow = Math.abs(price - candle.low);
+        const distOpen = Math.abs(price - candle.open);
+        const distClose = Math.abs(price - candle.close);
+        const min = Math.min(distHigh, distLow, distOpen, distClose);
+        let snappedPrice = candle.close;
+        if (min === distHigh) snappedPrice = candle.high;
+        else if (min === distLow) snappedPrice = candle.low;
+        else if (min === distOpen) snappedPrice = candle.open;
+        return { time: snappedIndex, price: snappedPrice };
+    }
+
     onMouseMove(e) {
         if (this._state === 'placing' && this._pendingDrawing) {
-            const tp = this._getTimePrice(e);
+            const tp = this._getTimePrice(e, e.ctrlKey);
             this._pendingDrawing.updatePendingAnchor(tp.index, tp.price);
             this._chart.drawingManager.emit('drawingsChanged');
             return true;
         }
 
         if (this._state === 'dragging' && this._dragInfo) {
-            const tp = this._getTimePrice(e);
+            const snapDrag = e.ctrlKey && !this._dragInfo.ctrlAtStart;
+            const tp = this._getTimePrice(e, snapDrag);
             const dm = this._chart.drawingManager;
 
-            // Ctrl+drag to clone (only once per drag)
-            if (e.ctrlKey && !this._clonedOnThisDrag) {
+            if (this._dragInfo.ctrlAtStart && !this._clonedOnThisDrag) {
                 this._cloneSelectedDrawings();
                 this._clonedOnThisDrag = true;
             }
 
-            const dt = tp.index - this._dragInfo.lastTime;
-            const dp = tp.price - this._dragInfo.lastPrice;
+            let dragTime = tp.index;
+            let dragPrice = tp.price;
+
+            const dt = dragTime - this._dragInfo.lastTime;
+            const dp = dragPrice - this._dragInfo.lastPrice;
 
             if (this._dragInfo.anchorIndex !== null && dm.selectedDrawings.length === 1) {
                 const drawing = dm.selectedDrawings[0];
-                drawing.moveAnchor(this._dragInfo.anchorIndex, tp.index, tp.price);
+                drawing.moveAnchor(this._dragInfo.anchorIndex, dragTime, dragPrice);
             } else {
                 for (const d of dm.selectedDrawings) {
                     d.moveAll(dt, dp);
                 }
             }
-            this._dragInfo.lastTime = tp.index;
-            this._dragInfo.lastPrice = tp.price;
+            this._dragInfo.lastTime = dragTime;
+            this._dragInfo.lastPrice = dragPrice;
             dm.emit('drawingsChanged');
             return true;
         }
 
-        // Hover detection
         if (this._state === 'idle' || this._state === 'selected') {
             const dm = this._chart.drawingManager;
             if (!dm.drawingsVisible) return false;
@@ -146,11 +220,23 @@ export class DrawingToolHandler {
             this._state = 'idle';
             return true;
         }
+        // Enter to finalize polygon
+        if (e.key === 'Enter' && this._state === 'placing' &&
+            this._pendingDrawing && this._pendingDrawing.type === 'polygon') {
+            if (this._pendingDrawing.anchors.length >= 3) {
+                this._pendingDrawing.finalizePlacement();
+                this._pendingDrawing = null;
+                this._state = 'idle';
+                dm.setActiveTool(DRAWING_TOOLS.POINTER);
+                dm.emit('drawingsChanged');
+            }
+            return true;
+        }
         return false;
     }
 
     _startPlacement(e, tool) {
-        const tp = this._getTimePrice(e);
+        const tp = this._getTimePrice(e, e.ctrlKey);
         let drawing;
 
         switch (tool) {
@@ -179,6 +265,24 @@ export class DrawingToolHandler {
                 }
                 return true;
             }
+            case DRAWING_TOOLS.RECTANGLE:
+                drawing = new RectangleDrawing(tp.index, tp.price);
+                break;
+            case DRAWING_TOOLS.CIRCLE:
+                drawing = new CircleDrawing(tp.index, tp.price);
+                break;
+            case DRAWING_TOOLS.TRIANGLE:
+                drawing = new TriangleDrawing(tp.index, tp.price);
+                break;
+            case DRAWING_TOOLS.POLYGON:
+                drawing = new PolygonDrawing(tp.index, tp.price);
+                break;
+            case DRAWING_TOOLS.LONG_POSITION:
+                drawing = new LongPositionDrawing(tp.index, tp.price);
+                break;
+            case DRAWING_TOOLS.SHORT_POSITION:
+                drawing = new ShortPositionDrawing(tp.index, tp.price);
+                break;
             default:
                 return false;
         }
@@ -204,7 +308,6 @@ export class DrawingToolHandler {
         const ps = this._chart.priceScale;
         const isCtrl = e.ctrlKey;
 
-        // Check anchor handles of single-selected drawing first
         if (dm.selectedDrawings.length === 1) {
             const sel = dm.selectedDrawings[0];
             if (!sel.isLocked) {
@@ -219,6 +322,7 @@ export class DrawingToolHandler {
                             anchorIndex: i,
                             lastTime: tp.index,
                             lastPrice: tp.price,
+                            ctrlAtStart: e.ctrlKey,
                         };
                         this._clonedOnThisDrag = false;
                         return true;
@@ -227,7 +331,6 @@ export class DrawingToolHandler {
             }
         }
 
-        // Hit test all drawings
         for (let i = dm.drawings.length - 1; i >= 0; i--) {
             const d = dm.drawings[i];
             if (d.hitTest(x, y, ts, ps)) {
@@ -236,7 +339,6 @@ export class DrawingToolHandler {
                 } else if (!isCtrl) {
                     dm.selectDrawing(d, false);
                 }
-                // Start dragging unless locked
                 if (!d.isLocked) {
                     this._state = 'dragging';
                     const tp = this._getTimePrice(e);
@@ -244,6 +346,7 @@ export class DrawingToolHandler {
                         anchorIndex: null,
                         lastTime: tp.index,
                         lastPrice: tp.price,
+                        ctrlAtStart: e.ctrlKey,
                     };
                     this._clonedOnThisDrag = false;
                 } else {
@@ -272,7 +375,6 @@ export class DrawingToolHandler {
             }
         }
         if (clones.length > 0) {
-            // Deselect originals, select clones (we'll be dragging the clones now)
             dm.deselectAll();
             for (const c of clones) {
                 dm.selectDrawing(c, true);

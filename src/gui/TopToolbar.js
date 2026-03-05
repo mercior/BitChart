@@ -1,3 +1,5 @@
+import { IndicatorRegistry } from '../indicators/IndicatorRegistry.js';
+
 const INTERVAL_GROUPS = [
     {
         label: 'TICKS',
@@ -78,6 +80,7 @@ export class TopToolbar {
         this._chart = chart;
         this._currentInterval = '3m';
         this._dropdownVisible = false;
+        this._indicatorDropdownVisible = false;
         this._build();
     }
 
@@ -112,8 +115,24 @@ export class TopToolbar {
             el.appendChild(btn);
         }
 
-        // Build dropdown (hidden by default)
+        // Separator before indicators
+        const sep2 = document.createElement('div');
+        sep2.className = 'btc-tt-sep';
+        el.appendChild(sep2);
+
+        // Indicators button
+        this._indicatorBtn = document.createElement('button');
+        this._indicatorBtn.className = 'btc-tt-interval-btn btc-tt-indicator-btn';
+        this._indicatorBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Indicators</span>`;
+        this._indicatorBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._toggleIndicatorDropdown();
+        });
+        el.appendChild(this._indicatorBtn);
+
+        // Build dropdowns (hidden by default)
         this._buildDropdown();
+        this._buildIndicatorDropdown();
     }
 
     _buildDropdown() {
@@ -190,5 +209,63 @@ export class TopToolbar {
         });
 
         this._chart.emit('intervalChanged', value);
+    }
+
+    // --- Indicator dropdown ---
+
+    _buildIndicatorDropdown() {
+        this._indicatorDropdown = document.createElement('div');
+        this._indicatorDropdown.className = 'btc-tt-dropdown btc-tt-indicator-dropdown';
+        this._indicatorDropdown.style.display = 'none';
+
+        const header = document.createElement('div');
+        header.className = 'btc-tt-dropdown-header';
+        header.textContent = 'INDICATORS';
+        this._indicatorDropdown.appendChild(header);
+
+        const indicators = IndicatorRegistry.getAll();
+        for (const IndicatorClass of indicators) {
+            const row = document.createElement('div');
+            row.className = 'btc-tt-dropdown-item';
+            row.textContent = IndicatorClass.indicatorName;
+            row.addEventListener('click', () => {
+                const instance = new IndicatorClass();
+                this._chart.indicatorManager.addIndicator(instance);
+                this._hideIndicatorDropdown();
+            });
+            this._indicatorDropdown.appendChild(row);
+        }
+
+        this._chart.layout._container.appendChild(this._indicatorDropdown);
+
+        this._indicatorCloseHandler = (e) => {
+            if (!this._indicatorDropdown.contains(e.target) && !this._indicatorBtn.contains(e.target)) {
+                this._hideIndicatorDropdown();
+            }
+        };
+    }
+
+    _toggleIndicatorDropdown() {
+        if (this._indicatorDropdownVisible) {
+            this._hideIndicatorDropdown();
+        } else {
+            this._showIndicatorDropdown();
+        }
+    }
+
+    _showIndicatorDropdown() {
+        const rect = this._indicatorBtn.getBoundingClientRect();
+        const containerRect = this._chart.layout._container.getBoundingClientRect();
+        this._indicatorDropdown.style.left = `${rect.left - containerRect.left}px`;
+        this._indicatorDropdown.style.top = `${rect.bottom - containerRect.top}px`;
+        this._indicatorDropdown.style.display = 'block';
+        this._indicatorDropdownVisible = true;
+        document.addEventListener('mousedown', this._indicatorCloseHandler);
+    }
+
+    _hideIndicatorDropdown() {
+        this._indicatorDropdown.style.display = 'none';
+        this._indicatorDropdownVisible = false;
+        document.removeEventListener('mousedown', this._indicatorCloseHandler);
     }
 }

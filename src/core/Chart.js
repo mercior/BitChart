@@ -13,14 +13,18 @@ import { CrosshairRenderer } from '../renderers/CrosshairRenderer.js';
 import { PriceAxisRenderer } from '../renderers/PriceAxisRenderer.js';
 import { TimeAxisRenderer } from '../renderers/TimeAxisRenderer.js';
 import { DrawingRenderer } from '../renderers/DrawingRenderer.js';
+import { IndicatorRenderer } from '../renderers/IndicatorRenderer.js';
 import { InteractionManager } from '../interaction/InteractionManager.js';
 import { DrawingManager } from '../drawings/DrawingManager.js';
+import { IndicatorManager } from '../indicators/IndicatorManager.js';
 import { Toolbar } from '../gui/Toolbar.js';
 import { TopToolbar } from '../gui/TopToolbar.js';
 import { StylePopup } from '../gui/StylePopup.js';
 import { DrawingToolbar } from '../gui/DrawingToolbar.js';
 import { TextInputDialog } from '../gui/TextInputDialog.js';
 import { SettingsPanel } from '../gui/SettingsPanel.js';
+import { IndicatorLegend } from '../gui/IndicatorLegend.js';
+import { IndicatorSettingsDialog } from '../gui/IndicatorSettingsDialog.js';
 import { SIZES } from '../constants.js';
 
 export class Chart extends EventEmitter {
@@ -38,6 +42,7 @@ export class Chart extends EventEmitter {
         this.crosshair = new Crosshair();
         this.series = new Series(this.dataStore, new StandardCandleStyle());
         this.drawingManager = new DrawingManager();
+        this.indicatorManager = new IndicatorManager();
         this.scheduler = new RenderScheduler();
 
         this._setupRenderers();
@@ -51,6 +56,7 @@ export class Chart extends EventEmitter {
     _setupRenderers() {
         const gridRenderer = new GridRenderer(this);
         const seriesRenderer = new SeriesRenderer(this);
+        const indicatorRenderer = new IndicatorRenderer(this);
         const drawingRenderer = new DrawingRenderer(this);
         const crosshairRenderer = new CrosshairRenderer(this);
         const priceAxisRenderer = new PriceAxisRenderer(this);
@@ -58,6 +64,7 @@ export class Chart extends EventEmitter {
 
         this.scheduler.registerRenderer('bg', gridRenderer);
         this.scheduler.registerRenderer('main', seriesRenderer);
+        this.scheduler.registerRenderer('main', indicatorRenderer);
         this.scheduler.registerRenderer('main', drawingRenderer);
         this.scheduler.registerRenderer('ui', crosshairRenderer);
         this.scheduler.registerRenderer('priceAxis', priceAxisRenderer);
@@ -66,6 +73,7 @@ export class Chart extends EventEmitter {
         this._renderers = {
             grid: gridRenderer,
             series: seriesRenderer,
+            indicator: indicatorRenderer,
             drawing: drawingRenderer,
             crosshair: crosshairRenderer,
             priceAxis: priceAxisRenderer,
@@ -78,18 +86,25 @@ export class Chart extends EventEmitter {
     }
 
     _setupToolbar() {
+        this.indicatorSettingsDialog = new IndicatorSettingsDialog(this);
         this.topToolbar = new TopToolbar(this);
         this.toolbar = new Toolbar(this);
         this.stylePopup = new StylePopup(this);
         this.drawingToolbar = new DrawingToolbar(this);
         this.textInputDialog = new TextInputDialog(this);
         this.settingsPanel = new SettingsPanel(this);
+        this.indicatorLegend = new IndicatorLegend(this);
     }
 
     _bindEvents() {
         this.dataStore.on('dataChanged', () => {
             this._updateScalesAfterDataChange();
+            this.indicatorManager.setCandles(this.dataStore.getAll());
             this.scheduler.invalidate('all');
+        });
+
+        this.indicatorManager.on('indicatorsChanged', () => {
+            this.scheduler.invalidate('main');
         });
 
         this.timeScale.on('scaleChanged', () => {

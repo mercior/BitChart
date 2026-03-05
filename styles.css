@@ -167,6 +167,111 @@ html, body {
     opacity: 0.4;
 }
 
+/* Grouped toolbar buttons */
+.btc-toolbar-group {
+    position: relative;
+}
+
+.btc-toolbar-group-btn {
+    position: relative;
+    overflow: visible;
+}
+
+.btc-toolbar-group-arrow {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 12px;
+    height: 12px;
+    opacity: 0;
+    pointer-events: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.btc-toolbar-group-arrow::after {
+    content: '';
+    position: absolute;
+    right: 1px;
+    bottom: 1px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 0 6px 6px;
+    border-color: transparent transparent #4a4e59 transparent;
+    transition: border-color 0.15s;
+}
+
+.btc-toolbar-group:hover .btc-toolbar-group-arrow,
+.btc-toolbar-group-btn.active .btc-toolbar-group-arrow {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.btc-toolbar-group-arrow:hover::after {
+    border-color: transparent transparent #d1d4dc transparent;
+}
+
+/* Flyout sub-menu */
+.btc-toolbar-flyout {
+    position: absolute;
+    z-index: 200;
+    background: #1e222d;
+    border: 1px solid #363a45;
+    border-radius: 6px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.7);
+    padding: 6px 0;
+    min-width: 180px;
+    white-space: nowrap;
+}
+
+.btc-toolbar-flyout-header {
+    font-size: 10px;
+    color: #4a4e59;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 6px 14px 8px;
+    user-select: none;
+    font-weight: 600;
+}
+
+.btc-toolbar-flyout-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    cursor: pointer;
+    color: #d1d4dc;
+    font-size: 12px;
+    transition: background 0.1s;
+}
+
+.btc-toolbar-flyout-item:hover {
+    background: #2a2e39;
+}
+
+.btc-toolbar-flyout-item.active {
+    color: #2962ff;
+    background: rgba(41, 98, 255, 0.08);
+}
+
+.btc-toolbar-flyout-icon {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.btc-toolbar-flyout-icon svg {
+    color: inherit;
+}
+
+.btc-toolbar-flyout-label {
+    flex: 1;
+}
+
 .btc-toolbar-separator {
     width: 24px;
     height: 1px;
@@ -504,6 +609,46 @@ html, body {
     background: rgba(239, 83, 80, 0.1);
 }
 
+.btc-dtb-fill-preview {
+    background-image: linear-gradient(45deg, #363a45 25%, transparent 25%),
+                      linear-gradient(-45deg, #363a45 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #363a45 75%),
+                      linear-gradient(-45deg, transparent 75%, #363a45 75%);
+    background-size: 8px 8px;
+    background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+}
+
+.btc-dtb-label {
+    font-size: 11px;
+    color: #787b86;
+    margin-right: 2px;
+    white-space: nowrap;
+}
+
+.btc-dtb-input {
+    width: 70px;
+    height: 24px;
+    padding: 2px 6px;
+    background: #131722;
+    border: 1px solid #363a45;
+    border-radius: 3px;
+    color: #d1d4dc;
+    font-size: 11px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.btc-dtb-input:focus {
+    border-color: #2962ff;
+}
+
+.btc-dtb-input::-webkit-inner-spin-button,
+.btc-dtb-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 /* Custom Color Popup */
 .btc-color-popup {
     position: absolute;
@@ -689,4 +834,485 @@ html, body {
 
 .btc-text-dialog-ok:hover {
     background: #1e53e5;
+}
+
+/* ========== Indicator Legend ========== */
+
+.btc-indicator-legend {
+    position: absolute;
+    top: 22px;
+    left: 8px;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    pointer-events: auto;
+    user-select: none;
+}
+
+.btc-il-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: background 0.12s;
+    height: 22px;
+}
+
+.btc-il-row:hover {
+    background: rgba(42, 46, 57, 0.6);
+}
+
+.btc-il-row.btc-il-hidden {
+    opacity: 0.4;
+}
+
+.btc-il-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.btc-il-name {
+    font: 11px "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+    color: #d1d4dc;
+    white-space: nowrap;
+    margin-right: 4px;
+}
+
+.btc-il-btn {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #787b86;
+    cursor: pointer;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.12s, background 0.12s, color 0.12s;
+}
+
+.btc-il-row:hover .btc-il-btn {
+    opacity: 1;
+}
+
+.btc-il-btn:hover {
+    background: #2a2e39;
+    color: #d1d4dc;
+}
+
+.btc-il-delete:hover {
+    color: #ef5350;
+    background: rgba(239, 83, 80, 0.1);
+}
+
+/* ========== Top Toolbar — Indicators Button ========== */
+
+.btc-tt-indicator-btn {
+    gap: 5px;
+    font-weight: 500;
+}
+
+.btc-tt-indicator-btn svg {
+    flex-shrink: 0;
+}
+
+/* ========== Indicator Settings Popup (draggable) ========== */
+
+.btc-isd {
+    position: absolute;
+    z-index: 500;
+    min-width: 340px;
+    max-width: 520px;
+    background: #1e222d;
+    border: 1px solid #363a45;
+    border-radius: 8px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.65);
+    font-family: "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+}
+
+/* Title bar */
+.btc-isd-titlebar {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px 8px 16px;
+    cursor: grab;
+    border-bottom: 1px solid #2a2e39;
+}
+
+.btc-isd-titlebar:active {
+    cursor: grabbing;
+}
+
+.btc-isd-title {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    color: #d1d4dc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btc-isd-close {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #787b86;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    flex-shrink: 0;
+}
+
+.btc-isd-close:hover {
+    background: #2a2e39;
+    color: #d1d4dc;
+}
+
+/* Tab bar */
+.btc-isd-tabbar {
+    display: flex;
+    gap: 0;
+    padding: 0 16px;
+    border-bottom: 1px solid #2a2e39;
+}
+
+.btc-isd-tab {
+    padding: 8px 14px 7px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #787b86;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: color 0.12s, border-color 0.12s;
+}
+
+.btc-isd-tab:hover {
+    color: #d1d4dc;
+}
+
+.btc-isd-tab.active {
+    color: #d1d4dc;
+    border-bottom-color: #2962ff;
+}
+
+/* Body */
+.btc-isd-body {
+    padding: 12px 16px 6px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: min(520px, 70vh);
+}
+
+.btc-isd-body::-webkit-scrollbar {
+    width: 5px;
+}
+
+.btc-isd-body::-webkit-scrollbar-thumb {
+    background: #363a45;
+    border-radius: 3px;
+}
+
+/* Group headers */
+.btc-isd-group {
+    font-size: 10px;
+    color: #4a4e59;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 10px 0 5px;
+    user-select: none;
+}
+
+.btc-isd-group:first-child {
+    padding-top: 2px;
+}
+
+/* Setting rows */
+.btc-isd-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    min-height: 28px;
+}
+
+.btc-isd-row:has(.btc-isd-maline) {
+    margin-bottom: 7px;
+    gap: 8px;
+}
+
+.btc-isd-label {
+    width: 100px;
+    flex-shrink: 0;
+    font-size: 12px;
+    color: #787b86;
+    white-space: nowrap;
+}
+
+.btc-isd-row:has(.btc-isd-maline) > .btc-isd-label {
+    width: 52px;
+}
+
+.btc-isd-control {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+/* Number / string input */
+.btc-isd-input {
+    width: 100%;
+    padding: 5px 8px;
+    background: #131722;
+    border: 1px solid #363a45;
+    border-radius: 4px;
+    color: #d1d4dc;
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.btc-isd-input:focus {
+    border-color: #2962ff;
+}
+
+/* Select */
+.btc-isd-select {
+    width: 100%;
+    padding: 5px 8px;
+    background: #131722;
+    border: 1px solid #363a45;
+    border-radius: 4px;
+    color: #d1d4dc;
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23787b86' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+}
+
+.btc-isd-select:focus {
+    border-color: #2962ff;
+}
+
+/* Color swatch */
+.btc-isd-color-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.btc-isd-color-swatch {
+    width: 32px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid #4a4e59;
+    cursor: pointer;
+    transition: border-color 0.12s;
+}
+
+.btc-isd-color-swatch:hover {
+    border-color: #d1d4dc;
+}
+
+.btc-isd-color-native {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 32px;
+    height: 24px;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Checkbox */
+.btc-isd-checkbox-wrap {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.btc-isd-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: #2962ff;
+    cursor: pointer;
+}
+
+/* Line style selector */
+.btc-isd-linestyle-wrap {
+    display: flex;
+    gap: 3px;
+}
+
+.btc-isd-ls-btn {
+    width: 36px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #131722;
+    border: 1px solid #363a45;
+    border-radius: 4px;
+    color: #787b86;
+    cursor: pointer;
+    transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.btc-isd-ls-btn:hover {
+    border-color: #5a5e69;
+    color: #d1d4dc;
+}
+
+.btc-isd-ls-btn.active {
+    border-color: #2962ff;
+    color: #d1d4dc;
+    background: rgba(41, 98, 255, 0.12);
+}
+
+/* Slider */
+.btc-isd-slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.btc-isd-slider {
+    flex: 1;
+    height: 4px;
+    accent-color: #2962ff;
+    cursor: pointer;
+    -webkit-appearance: auto;
+    appearance: auto;
+}
+
+.btc-isd-slider-val {
+    width: 38px;
+    text-align: right;
+    font-size: 11px;
+    color: #d1d4dc;
+    font-family: inherit;
+}
+
+/* Footer */
+.btc-isd-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px 12px;
+    border-top: 1px solid #2a2e39;
+}
+
+.btc-isd-btn {
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1px solid #363a45;
+    transition: background 0.12s;
+}
+
+.btc-isd-defaults {
+    background: #131722;
+    color: #787b86;
+}
+
+.btc-isd-defaults:hover {
+    background: #2a2e39;
+    color: #d1d4dc;
+}
+
+.btc-isd-cancel {
+    background: #131722;
+    color: #d1d4dc;
+}
+
+.btc-isd-cancel:hover {
+    background: #2a2e39;
+}
+
+.btc-isd-ok {
+    background: #2962ff;
+    color: #ffffff;
+    border-color: #2962ff;
+}
+
+.btc-isd-ok:hover {
+    background: #1e53e5;
+}
+
+/* MA Line compound row */
+.btc-isd-maline {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    min-width: 0;
+}
+
+.btc-isd-maline .btc-isd-checkbox {
+    flex-shrink: 0;
+}
+
+.btc-isd-maline-type {
+    width: 62px !important;
+    min-width: 0;
+    flex: 0 0 62px;
+    padding: 4px 18px 4px 5px !important;
+    font-size: 11px !important;
+}
+
+.btc-isd-maline-src {
+    width: 62px !important;
+    min-width: 0;
+    flex: 0 0 62px;
+    padding: 4px 18px 4px 5px !important;
+    font-size: 11px !important;
+}
+
+.btc-isd-maline-period {
+    width: 48px !important;
+    min-width: 0;
+    flex: 0 0 48px;
+    padding: 4px 2px !important;
+    font-size: 11px !important;
+    text-align: center;
+}
+
+.btc-isd-maline .btc-isd-color-wrap {
+    flex-shrink: 0;
+}
+
+.btc-isd-maline .btc-isd-color-swatch {
+    width: 24px;
+    height: 20px;
+}
+
+.btc-isd-maline .btc-isd-color-native {
+    width: 24px;
+    height: 20px;
 }

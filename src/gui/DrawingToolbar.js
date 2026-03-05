@@ -15,6 +15,9 @@ const COLOR_SWATCHES = [
     '#ec407a', '#e91e63', '#d81b60', '#c2185b', '#ad1457', '#f48fb1', '#f06292', '#ff4081', '#ff80ab', '#ff1744',
 ];
 
+const SHAPE_TYPES = new Set(['rectangle', 'triangle', 'circle', 'polygon']);
+const POSITION_TYPES = new Set(['longPosition', 'shortPosition']);
+
 export class DrawingToolbar {
     constructor(chart) {
         this._chart = chart;
@@ -92,11 +95,12 @@ export class DrawingToolbar {
         const first = selections[0];
         const isLine = selType === 'line' || selType === 'extendedLine' || selType === 'horizontalLine';
         const isText = selType === 'text';
+        const isShape = SHAPE_TYPES.has(selType);
+        const isPosition = POSITION_TYPES.has(selType);
         const allLocked = selections.every(d => d.isLocked);
 
         this._el.innerHTML = '';
 
-        // Drag handle
         const handle = this._mkEl('div', 'btc-dtb-drag-handle');
         handle.title = 'Drag to move';
         handle.textContent = '⋮⋮';
@@ -104,24 +108,18 @@ export class DrawingToolbar {
         this._el.appendChild(handle);
 
         if (isLine || isText || selType === 'mixed') {
-            // Color button (custom popup)
-            const colorBtn = this._mkEl('div', 'btc-dtb-control btc-dtb-color-btn');
-            colorBtn.title = 'Color & Opacity';
-            const preview = this._mkEl('div', 'btc-dtb-color-preview');
-            preview.style.background = first.style.color;
-            preview.style.opacity = first.style.opacity;
-            colorBtn.appendChild(preview);
-            colorBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this._toggleColorPopup(selections, preview);
-            });
-            this._el.appendChild(colorBtn);
+            this._addColorControl(selections, first, 'color', 'opacity', 'Color & Opacity');
         }
 
-        if (isLine || selType === 'mixed') {
+        if (isShape) {
+            this._addColorControl(selections, first, 'color', 'borderOpacity', 'Border Color');
+            this._el.appendChild(this._mkSep());
+            this._addFillColorControl(selections, first);
+        }
+
+        if (isLine || isShape || selType === 'mixed') {
             this._el.appendChild(this._mkSep());
 
-            // Line style
             const styleSel = this._mkSelect('btc-dtb-control btc-dtb-line-style', [
                 { v: 'solid', t: '—' }, { v: 'dashed', t: '- -' }, { v: 'dotted', t: '···' }
             ], first.style.lineStyle);
@@ -134,7 +132,6 @@ export class DrawingToolbar {
 
             this._el.appendChild(this._mkSep());
 
-            // Line width
             const widthSel = this._mkSelect('btc-dtb-control btc-dtb-line-width',
                 [1, 2, 3, 4, 5].map(n => ({ v: String(n), t: `${n}px` })),
                 String(first.style.lineWidth));
@@ -146,10 +143,13 @@ export class DrawingToolbar {
             this._el.appendChild(widthSel);
         }
 
+        if (isPosition) {
+            this._addPositionControls(selections, first);
+        }
+
         if (isText) {
             this._el.appendChild(this._mkSep());
 
-            // Edit text button
             const editBtn = this._mkEl('button', 'btc-dtb-control btc-dtb-btn');
             editBtn.title = 'Edit Text';
             editBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
@@ -192,7 +192,6 @@ export class DrawingToolbar {
 
         this._el.appendChild(this._mkSep());
 
-        // Lock
         const lockBtn = this._mkEl('button', `btc-dtb-control btc-dtb-btn btc-dtb-lock ${allLocked ? 'active' : ''}`);
         lockBtn.title = allLocked ? 'Unlock' : 'Lock';
         lockBtn.innerHTML = allLocked
@@ -206,7 +205,6 @@ export class DrawingToolbar {
         });
         this._el.appendChild(lockBtn);
 
-        // Delete
         const delBtn = this._mkEl('button', 'btc-dtb-control btc-dtb-btn btc-dtb-delete');
         delBtn.title = 'Delete';
         delBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
@@ -216,33 +214,100 @@ export class DrawingToolbar {
         this._isRendering = false;
     }
 
+    _addColorControl(selections, first, colorProp, opacityProp, title) {
+        const colorBtn = this._mkEl('div', 'btc-dtb-control btc-dtb-color-btn');
+        colorBtn.title = title;
+        const preview = this._mkEl('div', 'btc-dtb-color-preview');
+        preview.style.background = first.style[colorProp];
+        preview.style.opacity = first.style[opacityProp];
+        colorBtn.appendChild(preview);
+        colorBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._toggleColorPopup(selections, preview, colorProp, opacityProp);
+        });
+        this._el.appendChild(colorBtn);
+    }
+
+    _addFillColorControl(selections, first) {
+        const fillBtn = this._mkEl('div', 'btc-dtb-control btc-dtb-color-btn');
+        fillBtn.title = 'Fill Color & Opacity';
+        const preview = this._mkEl('div', 'btc-dtb-color-preview btc-dtb-fill-preview');
+        preview.style.background = first.style.fillColor || 'transparent';
+        preview.style.opacity = first.style.fillOpacity;
+        fillBtn.appendChild(preview);
+        fillBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._toggleColorPopup(selections, preview, 'fillColor', 'fillOpacity');
+        });
+        this._el.appendChild(fillBtn);
+    }
+
+    _addPositionControls(selections, first) {
+        this._el.appendChild(this._mkSep());
+
+        const qtyLabel = this._mkEl('span', 'btc-dtb-label');
+        qtyLabel.textContent = 'Qty:';
+        this._el.appendChild(qtyLabel);
+
+        const qtyInput = document.createElement('input');
+        qtyInput.type = 'number';
+        qtyInput.className = 'btc-dtb-control btc-dtb-input';
+        qtyInput.step = '0.001';
+        qtyInput.min = '0';
+        qtyInput.value = String(first.qty || 0.1);
+        qtyInput.addEventListener('change', () => {
+            const val = parseFloat(qtyInput.value) || 0.1;
+            for (const d of selections) d.qty = val;
+            this._emitChanged();
+        });
+        this._el.appendChild(qtyInput);
+
+        this._el.appendChild(this._mkSep());
+
+        const acctLabel = this._mkEl('span', 'btc-dtb-label');
+        acctLabel.textContent = 'Acct:';
+        this._el.appendChild(acctLabel);
+
+        const acctInput = document.createElement('input');
+        acctInput.type = 'number';
+        acctInput.className = 'btc-dtb-control btc-dtb-input';
+        acctInput.step = '100';
+        acctInput.min = '0';
+        acctInput.value = String(first.accountSize || 10000);
+        acctInput.addEventListener('change', () => {
+            const val = parseFloat(acctInput.value) || 10000;
+            for (const d of selections) d.accountSize = val;
+            this._emitChanged();
+        });
+        this._el.appendChild(acctInput);
+    }
+
     // -- Color popup with swatches + opacity --
 
-    _toggleColorPopup(selections, previewEl) {
+    _toggleColorPopup(selections, previewEl, colorProp, opacityProp) {
         if (this._colorPopupEl) {
             this._hideColorPopup();
             return;
         }
-        this._showColorPopup(selections, previewEl);
+        this._showColorPopup(selections, previewEl, colorProp, opacityProp);
     }
 
-    _showColorPopup(selections, previewEl) {
+    _showColorPopup(selections, previewEl, colorProp, opacityProp) {
         this._hideColorPopup();
         const first = selections[0];
         const popup = document.createElement('div');
         popup.className = 'btc-color-popup';
 
-        // Swatch grid
         const grid = document.createElement('div');
         grid.className = 'btc-color-grid';
         for (const color of COLOR_SWATCHES) {
             const swatch = document.createElement('div');
             swatch.className = 'btc-color-swatch';
-            if (color === first.style.color) swatch.classList.add('selected');
+            if (color === first.style[colorProp]) swatch.classList.add('selected');
             swatch.style.background = color;
             swatch.dataset.color = color;
             swatch.addEventListener('click', () => {
-                for (const d of selections) d.style.color = color;
+                for (const d of selections) d.style[colorProp] = color;
                 previewEl.style.background = color;
                 popup.querySelectorAll('.btc-color-swatch').forEach(s => s.classList.remove('selected'));
                 swatch.classList.add('selected');
@@ -252,7 +317,6 @@ export class DrawingToolbar {
         }
         popup.appendChild(grid);
 
-        // Custom color input (small, at bottom of swatches)
         const customRow = document.createElement('div');
         customRow.className = 'btc-color-custom-row';
         const plusBtn = document.createElement('div');
@@ -262,9 +326,9 @@ export class DrawingToolbar {
         const hiddenInput = document.createElement('input');
         hiddenInput.type = 'color';
         hiddenInput.className = 'btc-color-custom-input';
-        hiddenInput.value = first.style.color;
+        hiddenInput.value = first.style[colorProp] || '#ffffff';
         hiddenInput.addEventListener('input', (e) => {
-            for (const d of selections) d.style.color = e.target.value;
+            for (const d of selections) d.style[colorProp] = e.target.value;
             previewEl.style.background = e.target.value;
             this._emitChanged();
         });
@@ -272,7 +336,6 @@ export class DrawingToolbar {
         customRow.appendChild(plusBtn);
         popup.appendChild(customRow);
 
-        // Opacity section
         const opLabel = document.createElement('div');
         opLabel.className = 'btc-color-opacity-label';
         opLabel.textContent = 'Opacity';
@@ -287,16 +350,16 @@ export class DrawingToolbar {
         opSlider.min = '0';
         opSlider.max = '100';
         opSlider.step = '1';
-        opSlider.value = String(Math.round(first.style.opacity * 100));
+        opSlider.value = String(Math.round((first.style[opacityProp] ?? 1) * 100));
 
         const opVal = document.createElement('div');
         opVal.className = 'btc-color-opacity-val';
-        opVal.textContent = `${Math.round(first.style.opacity * 100)}%`;
+        opVal.textContent = `${Math.round((first.style[opacityProp] ?? 1) * 100)}%`;
 
         opSlider.addEventListener('input', () => {
             const pct = parseInt(opSlider.value);
             const val = pct / 100;
-            for (const d of selections) d.style.opacity = val;
+            for (const d of selections) d.style[opacityProp] = val;
             previewEl.style.opacity = val;
             opVal.textContent = `${pct}%`;
             this._emitChanged();
@@ -306,7 +369,6 @@ export class DrawingToolbar {
         opRow.appendChild(opVal);
         popup.appendChild(opRow);
 
-        // Position below the color button
         const btnRect = previewEl.parentElement.getBoundingClientRect();
         const containerRect = this._chart.layout._container.getBoundingClientRect();
         popup.style.left = `${btnRect.left - containerRect.left}px`;
@@ -315,7 +377,6 @@ export class DrawingToolbar {
         this._chart.layout._container.appendChild(popup);
         this._colorPopupEl = popup;
 
-        // Close on click outside
         this._colorPopupClose = (e) => {
             if (!popup.contains(e.target) && !previewEl.parentElement.contains(e.target)) {
                 this._hideColorPopup();

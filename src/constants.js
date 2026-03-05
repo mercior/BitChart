@@ -49,6 +49,12 @@ export const DRAWING_TOOLS = {
     EXTENDED_LINE: 'extendedLine',
     HORIZONTAL_LINE: 'horizontalLine',
     TEXT: 'text',
+    RECTANGLE: 'rectangle',
+    TRIANGLE: 'triangle',
+    CIRCLE: 'circle',
+    POLYGON: 'polygon',
+    LONG_POSITION: 'longPosition',
+    SHORT_POSITION: 'shortPosition',
 };
 
 export const LINE_STYLES = {
