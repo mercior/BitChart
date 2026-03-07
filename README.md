@@ -7,15 +7,12 @@ A high-performance, extensible JavaScript candlestick charting library built fro
 - **Standard OHLCV candlesticks** with wicks, pixel-perfect rendering at any zoom level
 - **Smooth pan & zoom** — click-drag to pan both axes, scroll wheel to zoom, allows zooming far out to below 1 pixel per candle
 - **Independent axis scaling** — drag the price axis or time axis to scale each independently
-- **Hide/show drawings** toggle
 - **Logarithmic scale** toggle for large price ranges
 - **Real-time streaming** — push new candle data with `updateCandle()`, chart follows live
-- **Drawing tools** — lines, shapess, text annotations
+- **Drawing tools** — lines, shapes, text annotations with custom colors, line styles * opacity
+- **Drawing management** — select, multi-select (Ctrl+click), drag, clone (Ctrl+drag), lock, delete
 - **Serializable Drawings** - for saving + loading your drawings
 - **Indicators** - Built in indicators & easy interface for creating custom indicators. Indicators support custom settings per indicator & provide UI to adjust them. 
-- **Drawing management** — select, multi-select (Ctrl+click), drag, clone (Ctrl+drag), lock, delete
-- **Custom drawing toolbar** — floating, draggable panel with context-aware controls per drawing type
-- **Color picker** — swatch grid with 100 preset colors + custom color + opacity slider
 - **Interval selector** — top toolbar with quick-access buttons and full dropdown (ticks through months)
 - **Extensible architecture** — Strategy pattern for candle styles, Observer pattern for events, clean separation of Model / Interaction / Rendering layers
 
