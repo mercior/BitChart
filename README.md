@@ -2,6 +2,8 @@
 
 A high-performance, extensible JavaScript candlestick charting library built from scratch with HTML5 Canvas. Designed for cryptocurrency markets — no empty-tick handling, no dependencies, pure vanilla JS with ES modules.
 
+<img src="https://i.gyazo.com/5929ff2c49d17b4dbe77cb729ecc14c7.gif" alt="Example">
+
 ## Features
 
 - **Standard OHLCV candlesticks** with wicks, pixel-perfect rendering at any zoom level
@@ -9,7 +11,7 @@ A high-performance, extensible JavaScript candlestick charting library built fro
 - **Independent axis scaling** — drag the price axis or time axis to scale each independently
 - **Logarithmic scale** toggle for large price ranges
 - **Real-time streaming** — push new candle data with `updateCandle()`, chart follows live
-- **Drawing tools** — lines, shapes, text annotations with custom colors, line styles * opacity
+- **Drawing tools** — lines, shapes, text annotations with custom colors, line styles & opacity
 - **Drawing management** — select, multi-select (Ctrl+click), drag, clone (Ctrl+drag), lock, delete
 - **Serializable Drawings** - for saving + loading your drawings
 - **Indicators** - Built in indicators & easy interface for creating custom indicators. Indicators support custom settings per indicator & provide UI to adjust them. 
