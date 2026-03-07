@@ -33,6 +33,13 @@ export class TextDrawing extends DrawingBase {
         return pts;
     }
 
+    toJSON(dataStore) {
+        const json = super.toJSON(dataStore);
+        json.text = this.text;
+        json.fontFamily = this.fontFamily;
+        return json;
+    }
+
     draw(ctx, timeScale, priceScale) {
         const pts = this.getPixelCoords(timeScale, priceScale);
         if (pts.length === 0) return;

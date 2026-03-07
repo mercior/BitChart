@@ -100,6 +100,14 @@ export class ShortPositionDrawing extends DrawingBase {
         return x >= b.left - tol && x <= b.right + tol && y >= top - tol && y <= bottom + tol;
     }
 
+    toJSON(dataStore) {
+        const json = super.toJSON(dataStore);
+        json.width = this.width;
+        json.qty = this.qty;
+        json.accountSize = this.accountSize;
+        return json;
+    }
+
     draw(ctx, timeScale, priceScale) {
         const b = this._getBox(timeScale, priceScale);
         const boxW = b.right - b.left;

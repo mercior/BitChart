@@ -86,6 +86,10 @@ export class PolygonDrawing extends DrawingBase {
         return false;
     }
 
+    toJSON(dataStore) {
+        return super.toJSON(dataStore);
+    }
+
     draw(ctx, timeScale, priceScale) {
         const pts = this.getPixelCoords(timeScale, priceScale);
         if (pts.length < 2) return;

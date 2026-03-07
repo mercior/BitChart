@@ -35,6 +35,10 @@ export class ExtendedLineDrawing extends DrawingBase {
         return dist <= SIZES.hitTestTolerance;
     }
 
+    toJSON(dataStore) {
+        return super.toJSON(dataStore);
+    }
+
     draw(ctx, timeScale, priceScale) {
         const pts = this.getPixelCoords(timeScale, priceScale);
         if (pts.length < 2) return;

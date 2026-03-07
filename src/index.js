@@ -18,6 +18,7 @@ export { CircleDrawing } from './drawings/CircleDrawing.js';
 export { PolygonDrawing } from './drawings/PolygonDrawing.js';
 export { LongPositionDrawing } from './drawings/LongPositionDrawing.js';
 export { ShortPositionDrawing } from './drawings/ShortPositionDrawing.js';
+export { createDrawingFromJSON } from './drawings/DrawingFactory.js';
 export { DrawingToolbar } from './gui/DrawingToolbar.js';
 export { TopToolbar } from './gui/TopToolbar.js';
 export { TextInputDialog } from './gui/TextInputDialog.js';

@@ -1,5 +1,6 @@
 import { EventEmitter } from '../core/EventEmitter.js';
 import { DRAWING_TOOLS } from '../constants.js';
+import { createDrawingFromJSON } from './DrawingFactory.js';
 
 export class DrawingManager extends EventEmitter {
     drawings = [];
@@ -98,5 +99,24 @@ export class DrawingManager extends EventEmitter {
         const type = this.selectedDrawings[0].type;
         if (this.selectedDrawings.every(d => d.type === type)) return type;
         return 'mixed';
+    }
+
+    exportDrawings(dataStore) {
+        return this.drawings
+            .filter(d => !d.isPlacing)
+            .map(d => d.toJSON(dataStore));
+    }
+
+    importDrawings(data, dataStore, clearExisting = true) {
+        if (clearExisting) {
+            this.drawings = [];
+            this.selectedDrawings = [];
+        }
+        for (const item of data) {
+            const drawing = createDrawingFromJSON(item, dataStore);
+            this.drawings.push(drawing);
+        }
+        this.emit('drawingsChanged');
+        this.emit('selectionChanged');
     }
 }

@@ -67,6 +67,30 @@ export class DrawingBase {
 
     draw(ctx, timeScale, priceScale) {}
 
+    toJSON(dataStore) {
+        return {
+            id: this.id,
+            type: this.type,
+            isLocked: this.isLocked,
+            style: this.style.toJSON(),
+            anchors: this.anchors.map(a => ({
+                time: dataStore.indexToTime(a.time),
+                price: a.price,
+            })),
+        };
+    }
+
+    _applyBaseJSON(data, dataStore) {
+        this.id = data.id;
+        this.isLocked = data.isLocked || false;
+        this.style = DrawingStyle.fromJSON(data.style);
+        this.anchors = data.anchors.map(a => ({
+            time: dataStore.timeToIndex(a.time),
+            price: a.price,
+        }));
+        this._isPlacing = false;
+    }
+
     _applyStyle(ctx) {
         ctx.globalAlpha = this.style.opacity;
         ctx.strokeStyle = this.style.color;

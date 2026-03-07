@@ -56,6 +56,10 @@ export class CircleDrawing extends DrawingBase {
         return Math.abs(dist - c.radius) <= tol;
     }
 
+    toJSON(dataStore) {
+        return super.toJSON(dataStore);
+    }
+
     draw(ctx, timeScale, priceScale) {
         const c = this._getCircleParams(timeScale, priceScale);
         if (!c || c.radius < 1) return;

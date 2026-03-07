@@ -24,7 +24,7 @@ export class TimeAxisRenderer {
 
         const ts = this._chart.timeScale;
         const ds = this._chart.dataStore;
-        const range = ts.visibleRange();
+        const range = ts.visibleRangeExtended();
         if (!range) return;
 
         const targetSpacingPx = 120;
@@ -37,8 +37,8 @@ export class TimeAxisRenderer {
 
         const startTick = Math.ceil(range.from / barsPerTick) * barsPerTick;
         for (let i = startTick; i <= range.to; i += barsPerTick) {
-            const candle = ds.getCandle(i);
-            if (!candle) continue;
+            const time = ds.getTimeForIndex(i);
+            if (time === 0) continue;
             const x = Math.round(ts.indexToX(i));
 
             // Tick mark
@@ -50,7 +50,7 @@ export class TimeAxisRenderer {
 
             // Time label
             ctx.fillStyle = COLORS.textSecondary;
-            ctx.fillText(formatTime(candle.time, ts.barWidth), x, SIZES.axisTickLength + 2);
+            ctx.fillText(formatTime(time, ts.barWidth), x, SIZES.axisTickLength + 2);
         }
 
         this._drawCrosshairLabel(ctx, h);

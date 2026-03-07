@@ -26,4 +26,21 @@ export class DrawingStyle {
     apply(overrides) {
         Object.assign(this, overrides);
     }
+
+    toJSON() {
+        return {
+            color: this.color,
+            lineWidth: this.lineWidth,
+            lineStyle: this.lineStyle,
+            opacity: this.opacity,
+            fillColor: this.fillColor,
+            fillOpacity: this.fillOpacity,
+            borderOpacity: this.borderOpacity,
+            fontSize: this.fontSize,
+        };
+    }
+
+    static fromJSON(data) {
+        return new DrawingStyle(data);
+    }
 }

@@ -37,6 +37,10 @@ export class HorizontalLineDrawing extends DrawingBase {
         this.anchors[0].price += deltaPrice;
     }
 
+    toJSON(dataStore) {
+        return super.toJSON(dataStore);
+    }
+
     draw(ctx, timeScale, priceScale) {
         const y = Math.round(priceScale.priceToY(this.anchors[0].price)) + 0.5;
 

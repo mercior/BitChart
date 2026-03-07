@@ -22,7 +22,7 @@ export const SIZES = {
     toolbarWidth: 40,
     priceAxisWidth: 80,
     timeAxisHeight: 30,
-    minBarWidth: 1,
+    minBarWidth: 0.05,
     maxBarWidth: 50,
     defaultBarWidth: 8,
     defaultBarSpacing: 2,

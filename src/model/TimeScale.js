@@ -49,6 +49,16 @@ export class TimeScale extends EventEmitter {
         };
     }
 
+    visibleRangeExtended() {
+        if (this._dataLength === 0) return null;
+        const firstIdx = this.xToIndex(0);
+        const lastIdx = this.xToIndex(this.chartWidth);
+        return {
+            from: Math.max(0, Math.floor(firstIdx)),
+            to: Math.ceil(lastIdx),
+        };
+    }
+
     get followMode() { return this._followMode; }
 
     scrollBy(deltaPixels) {
@@ -70,8 +80,7 @@ export class TimeScale extends EventEmitter {
         if (newBarWidth === this._barWidth) return;
 
         this._barWidth = newBarWidth;
-        // Adjust barSpacing proportionally
-        this._barSpacing = Math.max(1, Math.round(newBarWidth * 0.2));
+        this._barSpacing = this._computeSpacing(newBarWidth);
 
         // Keep the center index at the same pixel position after zoom
         const newStep = this._barWidth + this._barSpacing;
@@ -82,7 +91,7 @@ export class TimeScale extends EventEmitter {
 
     setBarWidth(newWidth) {
         this._barWidth = clamp(newWidth, SIZES.minBarWidth, SIZES.maxBarWidth);
-        this._barSpacing = Math.max(1, Math.round(this._barWidth * 0.2));
+        this._barSpacing = this._computeSpacing(this._barWidth);
         this._clampScroll();
         this.emit('scaleChanged');
     }
@@ -93,14 +102,18 @@ export class TimeScale extends EventEmitter {
         const availableWidth = this.chartWidth;
         const step = availableWidth / barsToFit;
         this._barWidth = clamp(step * 0.8, SIZES.minBarWidth, SIZES.maxBarWidth);
-        this._barSpacing = Math.max(1, step - this._barWidth);
+        this._barSpacing = this._computeSpacing(this._barWidth);
         this._scrollOffset = this._dataLength - 1;
         this.emit('scaleChanged');
     }
 
+    _computeSpacing(barWidth) {
+        return barWidth * 0.2;
+    }
+
     _clampScroll() {
         const minVisible = 5;
-        const maxScrollRight = this._dataLength - 1 + this.chartWidth / this.barStep * 0.5;
+        const maxScrollRight = this._dataLength - 1 + this.chartWidth / this.barStep * 0.9;
         const minScrollLeft = -this.chartWidth / this.barStep * 0.5 + minVisible;
         this._scrollOffset = clamp(this._scrollOffset, minScrollLeft, maxScrollRight);
     }

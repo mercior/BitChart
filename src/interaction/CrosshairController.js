@@ -18,7 +18,7 @@ export class CrosshairController {
 
         const snappedX = ts.indexToX(candleIndex);
         const price = ps.yToPrice(y);
-        const time = candle ? candle.time : null;
+        const time = candle ? candle.time : ds.getTimeForIndex(candleIndex);
 
         this._chart.crosshair.update(snappedX, y, price, time, candleIndex);
     }

@@ -175,6 +175,14 @@ export class Chart extends EventEmitter {
         this.scheduler.invalidate('priceAxis');
     }
 
+    exportDrawings() {
+        return this.drawingManager.exportDrawings(this.dataStore);
+    }
+
+    importDrawings(data, clearExisting = true) {
+        this.drawingManager.importDrawings(data, this.dataStore, clearExisting);
+    }
+
     destroy() {
         this.scheduler.stop();
         this.interactionManager.destroy();

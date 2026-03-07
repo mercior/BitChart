@@ -69,6 +69,10 @@ export class RectangleDrawing extends DrawingBase {
         return false;
     }
 
+    toJSON(dataStore) {
+        return super.toJSON(dataStore);
+    }
+
     draw(ctx, timeScale, priceScale) {
         const r = this._getRect(timeScale, priceScale);
         if (!r) return;

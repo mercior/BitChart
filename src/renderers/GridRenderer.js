@@ -38,8 +38,7 @@ export class GridRenderer {
 
     _drawVerticalLines(ctx, w, h) {
         const ts = this._chart.timeScale;
-        const ds = this._chart.dataStore;
-        const range = ts.visibleRange();
+        const range = ts.visibleRangeExtended();
         if (!range) return;
 
         const targetSpacingPx = 120;
